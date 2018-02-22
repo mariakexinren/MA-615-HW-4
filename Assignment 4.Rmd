@@ -1,0 +1,196 @@
+---
+title: "Assignment 4"
+author: "Maria Ren"
+date: "Feburary 20,2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library('tibble')
+library("tidyverse")
+library("dplyr")
+```
+
+### 1. 
+
+How can you tell if an object is a tibble?
+
+```{r}
+print(mtcars)
+print(as_tibble(mtcars))
+
+
+# A tibble prints only the first 10 rows of the data set, while the actual dataframe prints the entire dataset.
+```
+
+
+### 2. 
+
+Compare and contrast the following operations on dataframe, and equivalent tibble. What is different? why might the default data frame behaviors cause you frustration? 
+
+```{r}
+# On a data frame - given by the problem
+df <- data.frame(abc = 1, xyz = "a")
+df$x
+df[, "xyz"]
+df[, c("abc", "xyz")]
+class(df[, "xyz"])
+class(df[, c("abc", "xyz")])
+
+# On a tibble
+df <- tibble(abc = 1, xyz = "a")
+df$x
+df[, "xyz"]
+df[, c("abc", "xyz")]
+class(df[, "xyz"])
+class(df[, c("abc", "xyz")])
+
+# when we type in df$x for data frame, it returns the result of Levels: a, the same result as for df[, "xyz"]. This could result in using the wrong variable. where for tibbles, it gives NULL, and a warning message. All the other commands are similar between tibbles and data frame. The default data frame could return levels of factors, where subsetting tibble only returns tibbles (like shown above).
+
+```
+
+
+### 3. 
+
+If you have the name of a variable stored in an object, e.g. $var "mpg"$, how can you extract the reference variable from a tibble?
+ 
+```{r}
+# Use the double [[
+# var <- "mpg"
+# data[[var]]
+
+```
+
+### 4. 
+
+Practice referring to nonsyntactic names in the following data frame by:
+
+```{r}
+annoying <- tibble(
+  `1` = 1:10,
+  `2` = `1` * 2 + rnorm(length(`1`))
+)
+
+# 1) Extracting the variable called 1.
+annoying$`1`
+
+# 2) Plotting a scatterplot of 1 vs 2.
+ggplot(annoying, aes(`1`,`2`)) +
+       geom_point()
+
+# 3) Creating a new column called 3 which is 2 divided by 1.
+annoying[["3"]] <- annoying$`2`/annoying$`1`
+annoying
+
+# 4) Renaming the columns to one, two and three.
+annoying <- rename(annoying, one=`1`,two=`2`,three=`3`)
+annoying
+
+# 5. What does tibble::enframe() do? When might you use it?
+x <- c(a=2,b=9)
+tibble::enframe(x)
+?enframe()
+
+# tibble::enframe() turns a vector with names into a tibble with two columns,as shown from above. You can use it when you have a named data vector,and you want to add that to another data frame. 
+```
+
+### 5. 
+
+What option controls how many additional column names are printed at the footer of a tibble?
+
+```{r}
+# In the function print.tbl_df, the n_extra argument determines the number of extra columns to print abbreviated information for. The argument tibble.max_extra_cols determines the most extra columns. 
+```
+
+### 12.6.1 
+Exercises 
+
+```{r}
+# Original Data and Code 
+tidyr::who
+who %>%
+  gather(code, value, new_sp_m014:newrel_f65, na.rm = TRUE) %>% 
+  mutate(code = stringr::str_replace(code, "newrel", "new_rel")) %>%
+  separate(code, c("new", "var", "sexage")) %>% 
+  select(-new, -iso2, -iso3) %>% 
+  separate(sexage, c("sex", "age"), sep = 1)
+```
+
+### 1. 
+
+In this case study I set $na.rm = TRUE$ just to make it easier to check that we had the correct values. Is this reasonable? Think about how missing values are represented in this dataset. Are there implicit missing values? What’s the difference between an NA and zero?
+
+```{r}
+who1 <- who %>% 
+  gather(new_sp_m014:newrel_f65, key = "key", value = "cases", na.rm = TRUE)
+nrow(who1 %>% filter(cases==0))
+nrow(who1 %>% filter(cases==NA))
+
+
+# It is reasonable to treat missing values the same .Who1 combines all the columns from new-sp_m014 to newrel-f65. There are 11080 cases where the count of cases equals 0, which indicates no cases na.rm would not cause any lost of information.
+```
+
+###  2. 
+
+What happens if you neglect the $mutate()$ step? 
+$$(mutate(key = stringr::str_replace(key, "newrel", "new_rel")))$$
+
+```{r}
+who3 <- who1 %>% 
+  separate(key, c("new", "type", "sexage"), sep = "_")
+who3
+
+# As shown above, if we skip the mutate code, it gives us a warning message Warning message:Too few values at 2580 locations: 73467, 73468, 73469, 73470,73471, 73472, 73473, 73474, 73475, 73476, 73477, 73478, 73479, 73480, 73481,73482, 73483, 73484, 73485, 73486, ... The mutate step changes the new_rel and newrel strings so that they would be consistent. But if we skip the mutate step, we would be missing values once we separate the column "new" from type and sexage.
+
+```
+
+### 3. 
+
+I claimed that $iso2$ and $iso3$ were redundant with country. Confirm this claim.
+
+```{r}
+select(who3, country, iso2, iso3) %>%
+  distinct() %>% 
+# select unique rows from the data group of who3, country, iso2 and iso3
+  group_by(country) %>%
+  filter(n() > 1)
+# When we group together the three columns country, iso2 and iso3, and try to find 
+# unique rows from the data, we found that none of the values in the columns
+# have different values from each other, therefore these three columns are redundant.
+```
+
+### 4. 
+
+For each country, year, and sex compute the total number of cases of TB. Make an informative visualisation of the data.
+
+```{r}
+who1 <- who %>% 
+  gather(new_sp_m014:newrel_f65, key = "key", value = "cases", na.rm = TRUE)
+who2 <- who1 %>% 
+  mutate(key = stringr::str_replace(key, "newrel", "new_rel"))
+who3 <- who2 %>% 
+  separate(key, c("new", "type", "sexage"), sep = "_")
+who4 <- who3 %>% 
+  select(-new, -iso2, -iso3)
+who5 <- who4 %>% 
+  separate(sexage, c("sex", "age"), sep = 1)
+
+who5 %>% 
+  group_by(country,sex,age) %>% 
+  summarize(total_cases=sum(cases))
+# The total number of cases for TB is 43397518
+
+
+who5 %>%
+  group_by(country,sex,age) %>%
+  summarize(total_cases=sum(cases))%>%
+  unite(df,"country","sex") %>%
+  ggplot(aes(x = "year", y = "cases", group = df)) +
+  geom_line()
+
+```
