@@ -99,7 +99,7 @@ tibble::enframe(x)
 # tibble::enframe() turns a vector with names into a tibble with two columns,as shown from above. You can use it when you have a named data vector,and you want to add that to another data frame. 
 ```
 
-### 5. 
+### 6. 
 
 What option controls how many additional column names are printed at the footer of a tibble?
 
