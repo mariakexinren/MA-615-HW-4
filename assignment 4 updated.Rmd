@@ -161,6 +161,7 @@ a[order(a['religion']),]
 
 ```{r}
 # Get data from github for table 7
+
 options(stringsAsFactors = FALSE)
 library(lubridate)
 library(reshape2)
