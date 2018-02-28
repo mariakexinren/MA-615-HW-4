@@ -35,12 +35,14 @@ who5 <- who4 %>%
 
 
 ```{r}
-select(who3, country, iso2, iso3) %>%
-  distinct() %>% 
+a <- select(who3, country, iso2, iso3)
+b <- unique.data.frame(a) %>%
 # select unique rows from the data group of who3, country, iso2 and iso3
   group_by(country) %>%
   filter(n() > 1)
-# When we group together the three columns country, iso2 and iso3, and try to findunique rows from the data, we found that none of the values in the columns have different values from each other, therefore these three columns are redundant.
+b
+
+# When we group together the three columns country, iso2 and iso3, and try to find unique rows from the data, we found that none of the values in the columns have different values from each other, therefore these three columns are redundant.
 ```
 
 (4) For each country, year, and sex compute the total number of cases of TB. Make an informative visualisation of the data.
@@ -48,25 +50,30 @@ select(who3, country, iso2, iso3) %>%
 ```{r}
 
 who5 %>% 
-  group_by(country,sex,age) %>% 
+  group_by(country,sex,year) %>% 
   summarize(total_cases=sum(cases))
-# The total number of cases for TB is 43397518
+# Total_cases gives the total number of cases of TB for each country, each sex in each year
+
+```
+
+```{r}
 
 who5 %>%
   group_by(country, year, sex) %>%
   filter(year > 1995) %>%
-  summarise(cases = sum(cases)) %>%
+  summarise(total_cases=sum(cases)) %>%
   unite(country_sex, country, sex, remove = FALSE) %>%
-  ggplot(aes(x = year, y = cases, group = country_sex, colour = sex)) +
+  ggplot(aes(x = year, y = total_cases, group = country_sex, color = sex)) +
   geom_line()
 
-# who5 %>%
-#   group_by(country,sex,age) %>%
-#   summarize(total_cases=sum(cases))%>%
-#   unite(df,"country","sex") %>%
-#   ggplot(aes(x = "year", y = "cases", group = df)) +
-#   geom_line()
-
+who5 %>%
+  group_by(country, year, sex) %>%
+  filter(year > 1995) %>%
+  summarise(total_cases=sum(cases)) %>%
+  unite(year_country, year, country, remove = FALSE) %>%
+  ggplot(aes(x = year, y = total_cases, group = year_country, color = country)) +
+  geom_line(show.legend = FALSE)
+# Looking at both graph, the first one shows that amount of cases of TB found in male seems to be more than female. From the second graph, we can see that the number of TB cases is especially high around the year of 2007
 ```
 
 ## 10.5 : problem 5 
@@ -148,6 +155,7 @@ table4
 a <- melt(data=table4)
 names(a) <- c("religion","income","freq")
 a[order(a['religion']),]
+arrange(a,religion,income,freq)
 
 
 
@@ -161,6 +169,20 @@ a[order(a['religion']),]
 
 ```{r}
 # Get data from github for table 7
+detach_package <- function(pkg, character.only = FALSE)
+{
+  if(!character.only)
+  {
+    pkg <- deparse(substitute(pkg))
+  }
+  search_item <- paste("package", pkg, sep = ":")
+  while(search_item %in% search())
+  {
+    detach(search_item, unload = TRUE, character.only = TRUE)
+  }
+}
+
+detach_package(dplyr)
 
 options(stringsAsFactors = FALSE)
 library(lubridate)
@@ -212,15 +234,29 @@ rank <- rank[c("id", "date", "rank")]
 rank$date <- as.character(rank$date)
 xtable(rank[1:15, ], "billboard-rank.tex")
 
+```
 
+```{r}
 
-
-
-
-
+# Table 7 
+raw
 
 ```
 
+
+
+```{r}
+# Table 8 
+a <- melt(raw, id = 1:5, na.rm = T)
+a$week <- as.integer(str_replace_all(a$variable, "[^0-9]+", ""))
+a <- a[order(a["artist"]),]
+colnames(a)[7] <- "rank"
+a$date <- ymd(a$date)
+a$date <- a$date + weeks(a$week - 1)
+a <- arrange(a, year, artist, track, time, week)
+a <-  a[c("year", "artist", "time", "track", "date", "week", "rank")]
+a
+```
 
 
 
