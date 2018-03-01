@@ -2,7 +2,9 @@
 title: "Assignment 4 updated"
 author: "Maria Ren"
 date: "2/23/2018"
-output: pdf_document
+output: 
+  pdf_document: 
+    latex_engine: xelatex
 ---
 
 ```{r setup, include=FALSE}
@@ -10,26 +12,29 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-## 12.6.1 : problems 3 and 4 
+## 12.6.1 problems 3 and 4
 
-(3) I claimed that iso2 and iso3 were redundant with country. Confirm this claim. 
 ```{r}
-# Original Data and textbook code 
-library(tibble)
 library(tidyverse)
 library(dplyr)
 library(tidyr)
+```
+
+(3) I claimed that $iso2$ and $iso3$ were redundant with country. Confirm this claim.
+
+```{r}
+# Original Data and textbook code
 
 tidyr::who
-who1 <- who %>% 
+who1 <- who %>%
   gather(new_sp_m014:newrel_f65, key = "key", value = "cases", na.rm = TRUE)
-who2 <- who1 %>% 
+who2 <- who1 %>%
   mutate(key = stringr::str_replace(key, "newrel", "new_rel"))
-who3 <- who2 %>% 
+who3 <- who2 %>%
   separate(key, c("new", "type", "sexage"), sep = "_")
-who4 <- who3 %>% 
+who4 <- who3 %>%
   select(-new, -iso2, -iso3)
-who5 <- who4 %>% 
+who5 <- who4 %>%
   separate(sexage, c("sex", "age"), sep = 1)
 ```
 
@@ -49,8 +54,8 @@ b
 
 ```{r}
 
-who5 %>% 
-  group_by(country,sex,year) %>% 
+who5 %>%
+  group_by(country,sex,year) %>%
   summarize(total_cases=sum(cases))
 # Total_cases gives the total number of cases of TB for each country, each sex in each year
 
@@ -76,27 +81,26 @@ who5 %>%
 # Looking at both graph, the first one shows that amount of cases of TB found in male seems to be more than female. From the second graph, we can see that the number of TB cases is especially high around the year of 2007
 ```
 
-## 10.5 : problem 5 
+## 10.5 : problem 5
 
-(5) What does $tibble::enframe()$ do ? When might you use it? 
+(5) What does $tibble:enframe()$ do? When might you use it?
 
 ```{r}
 x <- c(m=2,n=9)
 tibble::enframe(x)
-?enframe()
 
-# tibble::enframe() turns a vector with names into a tibble with two columns,as shown from above. You can use it when you have a named data vector,and you want to add that to another data frame. 
+# tibble::enframe() turns a vector with names into a tibble with two columns,as shown from above. You can use it when you have a named data vector,and you want to add that to another data frame.
 
 ```
 
 
-## Tidy Data Article : 
+## Tidy Data Article :
 
-3) table 4 to table 6 
+3) table 4 to table 6
 
 ```{r}
 
-# Get data from github for table 4 
+# Get data from github for table 4
 
 library(foreign)
 library(stringr)
@@ -121,28 +125,24 @@ religion$reltrad[religion$q16 == " Agnostic (not sure if there is a God) "] <- "
 religion$reltrad <- str_trim(religion$reltrad)
 religion$reltrad <- str_replace_all(religion$reltrad, " \\(.*?\\)", "")
 
-religion$income <- c("Less than $10,000" = "<$10k", 
-  "10 to under $20,000" = "$10-20k", 
-  "20 to under $30,000" = "$20-30k", 
-  "30 to under $40,000" = "$30-40k", 
-  "40 to under $50,000" = "$40-50k", 
+religion$income <- c("Less than $10,000" = "<$10k",
+  "10 to under $20,000" = "$10-20k",
+  "20 to under $30,000" = "$20-30k",
+  "30 to under $40,000" = "$30-40k",
+  "40 to under $50,000" = "$40-50k",
   "50 to under $75,000" = "$50-75k",
-  "75 to under $100,000" = "$75-100k", 
-  "100 to under $150,000" = "$100-150k", 
-  "$150,000 or more" = ">150k", 
+  "75 to under $100,000" = "$75-100k",
+  "100 to under $150,000" = "$100-150k",
+  "$150,000 or more" = ">150k",
   "Don't know/Refused (VOL)" = "Don't know/refused")[religion$income]
 
-religion$income <- factor(religion$income, levels = c("<$10k", "$10-20k", "$20-30k", "$30-40k", "$40-50k", "$50-75k", 
+religion$income <- factor(religion$income, levels = c("<$10k", "$10-20k", "$20-30k", "$30-40k", "$40-50k", "$50-75k",
   "$75-100k", "$100-150k", ">150k", "Don't know/refused"))
 
 
-
-xtable(counts[1:10, ], file = "pew-clean.tex")
-
 # Convert into the form in which I originally saw it -------------------------
 
-raw <- dcast(counts, religion ~ income)
-xtable(raw[1:10, 1:7], file = "pew-raw.tex")
+
 
 table4 <- raw
 table4
@@ -150,12 +150,12 @@ table4
 
 ```{r}
 
-# Turning table 4 to table 6 
+# Turning table 4 to table 6
 
 a <- melt(data=table4)
-names(a) <- c("religion","income","freq")
-a[order(a['religion']),]
-arrange(a,religion,income,freq)
+colnames(a)[colnames(a)=="variable"] <- "income"
+colnames(a)[colnames(a)=="value"] <- "freq"
+a
 
 
 
@@ -169,20 +169,6 @@ arrange(a,religion,income,freq)
 
 ```{r}
 # Get data from github for table 7
-detach_package <- function(pkg, character.only = FALSE)
-{
-  if(!character.only)
-  {
-    pkg <- deparse(substitute(pkg))
-  }
-  search_item <- paste("package", pkg, sep = ":")
-  while(search_item %in% search())
-  {
-    detach(search_item, unload = TRUE, character.only = TRUE)
-  }
-}
-
-detach_package(dplyr)
 
 options(stringsAsFactors = FALSE)
 library(lubridate)
@@ -200,45 +186,12 @@ raw$track <- str_replace(raw$track, " \\(.*?\\)", "")
 names(raw)[-(1:5)] <- str_c("wk", 1:76)
 raw <- arrange(raw, year, artist, track)
 
-long_name <- nchar(raw$track) > 20
-raw$track[long_name] <- paste0(substr(raw$track[long_name], 0, 20), "...")
-
-
-xtable(raw[c(1:3, 6:10), 1:8], "billboard-raw.tex")
-
-clean <- melt(raw, id = 1:5, na.rm = T)
-clean$week <- as.integer(str_replace_all(clean$variable, "[^0-9]+", ""))
-clean$variable <- NULL
-
-clean$date.entered <- ymd(clean$date.entered)
-clean$date <- clean$date.entered + weeks(clean$week - 1)
-clean$date.entered <- NULL
-clean <- rename(clean, c("value" = "rank"))
-clean <- arrange(clean, year, artist, track, time, week)
-clean <- clean[c("year", "artist", "time", "track", "date", "week", "rank")]
-
-clean_out <- mutate(clean, 
-  date = as.character(date))
-xtable(clean_out[1:15, ], "billboard-clean.tex")
-
-# Normalisation --------------------------------------------------------------
-
-song <- unrowname(unique(clean[c("artist", "track", "time")]))
-song$id <- 1:nrow(song)
-
-narrow <- song[1:15, c("id","artist", "track", "time")]
-xtable(narrow, "billboard-song.tex")
-
-rank <- join(clean, song, match = "first")
-rank <- rank[c("id", "date", "rank")]
-rank$date <- as.character(rank$date)
-xtable(rank[1:15, ], "billboard-rank.tex")
 
 ```
 
 ```{r}
 
-# Table 7 
+# Table 7
 raw
 
 ```
@@ -246,7 +199,7 @@ raw
 
 
 ```{r}
-# Table 8 
+# Table 8
 a <- melt(raw, id = 1:5, na.rm = T)
 a$week <- as.integer(str_replace_all(a$variable, "[^0-9]+", ""))
 a <- a[order(a["artist"]),]
@@ -257,27 +210,5 @@ a <- arrange(a, year, artist, track, time, week)
 a <-  a[c("year", "artist", "time", "track", "date", "week", "rank")]
 a
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
